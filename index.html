@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Midterm Quiz Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: a game-show board — seven module columns of three point tiles; one question panel replaces the board */
+:root{
+  --ground:#e9edf5; --board:#152a5c; --tile:#1f3c80; --tileInk:#ffd36b; --done:#c9d2e3; --doneInk:#2a3550;
+  --panel:#ffffff; --ink:#141b2d; --soft:#46506a; --line:#7a859c; --red:#b5121b;
+  --good:#0f6538; --goodwash:#e2f3e9; --bad:#a3141d; --badwash:#fbe8e9; --focus:#ffbf00;
+  --display:"Big Shoulders Display","Arial Narrow",Impact,sans-serif;
+  --body:"Atkinson Hyperlegible",Verdana,system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --ground:#0c1222; --board:#0f1e44; --tile:#1b3270; --tileInk:#ffd36b; --done:#2b3449; --doneInk:#c9d2e3;
+  --panel:#161e33; --ink:#eef2fa; --soft:#b6bfd3; --line:#7883a0; --red:#ff8a90;
+  --good:#86dcaa; --goodwash:#16301f; --bad:#ff9aa0; --badwash:#3b1a1e; --focus:#ffcf40; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --ground:#0c1222; --board:#0f1e44; --tile:#1b3270; --tileInk:#ffd36b; --done:#2b3449; --doneInk:#c9d2e3;
+  --panel:#161e33; --ink:#eef2fa; --soft:#b6bfd3; --line:#7883a0; --red:#ff8a90;
+  --good:#86dcaa; --goodwash:#16301f; --bad:#ff9aa0; --badwash:#3b1a1e; --focus:#ffcf40; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--body);font-size:1.05rem;line-height:1.55;margin:0}
+.wrap{max-width:68rem;margin:0 auto;padding-inline:16px;padding-block:24px 48px}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:10px}
+h1{font-family:var(--display);font-weight:900;font-size:clamp(2.4rem,8vw,4rem);line-height:.95;margin:0;letter-spacing:.01em;text-transform:uppercase}
+.sub{margin:4px 0 0;color:var(--soft)}
+.scorebox{font-family:var(--display);font-weight:700;font-size:1.6rem;background:var(--board);color:var(--tileInk);padding:6px 16px;border-radius:6px;font-variant-numeric:tabular-nums}
+.board{background:var(--board);border-radius:10px;padding:10px;margin-top:18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(8.6rem,1fr));gap:8px}
+.col{display:grid;gap:8px;grid-template-rows:5.2rem repeat(3,4rem);min-width:0}
+.col h3{margin:0;height:100%;display:grid;place-items:center;text-align:center;font-family:var(--display);font-weight:700;font-size:1.15rem;line-height:1.1;color:#ffffff;background:var(--tile);border-radius:6px;padding:8px;text-transform:uppercase;letter-spacing:.02em}
+.col h3 small{display:block;font-family:var(--body);font-size:.75rem;text-transform:none;letter-spacing:0;color:#dfe6f7}
+.tile{font-family:var(--display);font-weight:900;font-size:2rem;color:var(--tileInk);background:var(--tile);border:2px solid transparent;border-radius:6px;min-height:4rem;cursor:pointer;font-variant-numeric:tabular-nums}
+.tile:hover:not([aria-disabled="true"]){border-color:var(--tileInk)}
+.tile[aria-disabled="true"]{background:var(--done);color:var(--doneInk);font-size:1rem;font-family:var(--body);font-weight:700;cursor:default}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:clamp(16px,4vw,30px);margin-top:18px;max-width:46rem}
+.cat{font-size:.85rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--red);margin:0 0 6px}
+#qText{font-size:1.3rem;margin:0 0 16px;outline:none}
+#opts{display:grid;gap:10px}
+.opt{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;text-align:left;font:inherit;color:var(--ink);background:var(--panel);border:2px solid var(--line);border-radius:8px;padding:12px 14px;cursor:pointer;min-height:48px}
+.opt:hover:not(:disabled){border-color:var(--ink)}
+.opt .k{font-weight:700;color:var(--soft)}
+.opt .b{grid-column:2;font-size:.85rem;font-weight:700}
+.opt .b:empty{display:none}
+.opt:disabled{cursor:default}
+.opt.right{border-color:var(--good);background:var(--goodwash)} .opt.right .b{color:var(--good)}
+.opt.wrong{border-color:var(--bad);background:var(--badwash)} .opt.wrong .b{color:var(--bad)}
+#fb{margin-top:16px;border-left:5px solid var(--line);padding-left:14px}
+#fb.good{border-color:var(--good)} #fb.bad{border-color:var(--bad)}
+#fbHead{font-family:var(--display);font-weight:700;font-size:1.6rem;margin:0;outline:none}
+.btn{font-family:var(--display);font-weight:700;font-size:1.2rem;letter-spacing:.03em;text-transform:uppercase;background:var(--board);color:var(--tileInk);border:0;border-radius:6px;padding:10px 20px;cursor:pointer;min-height:44px}
+.btn.ghost{background:transparent;color:var(--ink);border:2px solid var(--line)}
+.row{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;align-items:center}
+.note{font-size:.92rem;color:var(--soft)}
+:focus-visible{outline:4px solid var(--focus);outline-offset:2px}
+table{border-collapse:collapse;width:100%;margin:12px 0;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:8px;border-bottom:1px solid var(--line)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div><h1>Midterm Quiz Board</h1><p class="sub">CSIT 110 · Review of Modules 1–7 · Pick any tile, in any order</p></div>
+    <div class="scorebox" id="score" aria-live="off">0 pts</div>
+  </header>
+  <main>
+    <section id="boardView" aria-labelledby="boardHead">
+      <h2 id="boardHead" class="sr">Quiz board</h2>
+      <p class="note" style="margin:12px 0 0">Seven modules, three questions each. Harder questions are worth more. No timer. A wrong answer scores zero, never negative. <span id="best"></span></p>
+      <div class="board" id="board"></div>
+      <div class="row">
+        <button class="btn ghost" type="button" id="finishBtn">Finish and see results</button>
+        <button class="btn ghost" type="button" id="resetBtn">Reset the board</button>
+      </div>
+    </section>
+
+    <section id="qView" class="panel" hidden aria-labelledby="qText">
+      <p class="cat" id="qCat"></p>
+      <h2 id="qText"></h2>
+      <div id="opts" role="group" aria-label="Answer choices"></div>
+      <div id="fb" hidden>
+        <h3 id="fbHead"></h3>
+        <p id="fbText"></p>
+        <button class="btn" type="button" id="backBtn">Back to the board</button>
+      </div>
+    </section>
+
+    <section id="resView" class="panel" hidden aria-labelledby="resHead">
+      <h2 id="resHead" style="font-family:var(--display);font-size:2.2rem;margin:0;outline:none">Final score</h2>
+      <p id="resScore" style="font-family:var(--display);font-weight:900;font-size:3rem;margin:4px 0;line-height:1"></p>
+      <table><caption class="sr">Points earned by module</caption><thead><tr><th scope="col">Module</th><th scope="col">Correct</th><th scope="col">Points</th></tr></thead><tbody id="resBody"></tbody></table>
+      <p id="resTip"></p>
+      <button class="btn" type="button" id="againBtn">Play again</button>
+    </section>
+  </main>
+  <p class="note" style="margin-top:18px">Questions are drawn from the Module 8 Midterm Study Guide. Use the guide to review anything you miss.</p>
+  <div id="live" class="sr" aria-live="polite"></div>
+</div>
+
+<script>
+const CATS = [
+  { m: "M1", name: "AI Literacy", qs: [
+    ["What does a \"training opt-out\" privacy setting do?", ["Deletes your account after 30 days", "Stops the company from using your conversations to train its AI models", "Blocks the AI from using the internet", "Turns off the AI's memory of your name"], 1, "A training opt-out stops your chats from being used to improve the company's models."],
+    ["Which best describes AI literacy?", ["Knowing how to write code for AI models", "Being able to understand, use, and critically evaluate AI tools", "Using AI for every assignment", "Memorizing the names of AI companies"], 1, "AI literacy means understanding, using, and critically evaluating AI, including knowing when to check its work."],
+    ["Why compare several AI tools on the same task?", ["They always give identical answers, so it confirms the result", "Different tools behave differently, so comparing shows strengths and blind spots", "It's required by the tools' terms of service", "It makes each tool smarter"], 1, "Tools differ in training data, safety rules, and design, so comparing them shows where each is strong or weak."],
+  ]},
+  { m: "M2", name: "History", qs: [
+    ["In what year did Alan Turing propose the \"imitation game,\" now known as the Turing Test?", ["1936", "1950", "1956", "1997"], 1, "Turing proposed the imitation game in 1950. The 1956 Dartmouth workshop named the field \"artificial intelligence.\""],
+    ["In what year did IBM's Deep Blue defeat Garry Kasparov in a chess match?", ["1989", "1996", "1997", "2011"], 2, "Deep Blue won one game in 1996 but lost that match. It won the 1997 rematch."],
+    ["Every AI system in use today is an example of…", ["Artificial general intelligence (AGI)", "Narrow AI", "Superintelligence", "Expert-level general AI"], 1, "Today's systems are narrow AI, built for specific kinds of tasks. AGI remains hypothetical."],
+  ]},
+  { m: "M3", name: "Under the Hood", qs: [
+    ["How does a large language model produce its response?", ["It looks each fact up in a database", "It predicts the next token, one at a time", "It copies the closest answer from the internet", "A programmer writes a rule for every question"], 1, "LLMs generate text by repeatedly predicting a likely next token based on patterns learned in training."],
+    ["During training, a neural network adjusts its weights to reduce…", ["The number of layers", "The loss, which measures how wrong its predictions are", "The amount of training data", "The number of tokens"], 1, "Training measures error (the loss) and adjusts weights through backpropagation and gradient descent to reduce it."],
+    ["What makes deep learning \"deep\"?", ["It uses neural networks with many hidden layers", "It reads very long documents", "It runs on underwater servers", "It only works on images"], 0, "Deep learning uses neural networks with many layers between input and output."],
+  ]},
+  { m: "M4", name: "Prompt Design", qs: [
+    ["You include three example input-and-output pairs in your prompt. Which technique is that?", ["Zero-shot", "Few-shot", "Chain-of-thought", "Persona"], 1, "Few-shot prompting gives the model a few examples to follow."],
+    ["Asking the model to work through a problem step by step before answering is called…", ["Few-shot prompting", "Chain-of-thought prompting", "Zero-shot prompting", "Prompt injection"], 1, "Chain-of-thought prompting asks for step-by-step reasoning before the final answer."],
+    ["Which of these is NOT one of the four core prompt design principles from Module 4?", ["Clarity", "Context", "Complexity", "Constraints"], 2, "The four principles are clarity, context, constraints, and examples. Adding complexity isn't one of them."],
+  ]},
+  { m: "M5", name: "Text & Chat AI", qs: [
+    ["What do we call a confident-sounding AI output that is false or made up?", ["A token", "A hallucination", "A deepfake", "An anchor"], 1, "A hallucination is a fluent, confident answer that isn't true, such as a fake quote or study."],
+    ["Why can ChatGPT, Claude, and Gemini give different answers to the same prompt?", ["Only one of them is really AI", "They differ in training data, safety rules, and design choices", "They are all connected to the same database", "The prompt is changed in transit"], 1, "Different training data, safety rules, and design priorities lead to different answers."],
+    ["What is a major risk of relying on AI-text detectors?", ["They can't read long essays", "False positives, including documented bias against non-native English writers", "They only work in Canvas", "They make AI writing better"], 1, "Detectors can wrongly flag human writing as AI-generated, and research found bias against non-native English writers."],
+  ]},
+  { m: "M6", name: "Images, Audio & Video", qs: [
+    ["How does a diffusion model create an image?", ["It edits a stock photo", "It starts from random noise and removes it step by step, guided by the prompt", "It traces a drawing you upload", "It searches the web for a match"], 1, "Diffusion models learn to remove noise, then generate by denoising from random noise toward the prompt."],
+    ["An image has no Content Credentials label. What can you conclude?", ["It's definitely real", "It's definitely AI-generated", "Nothing by itself, because labels can be stripped", "It's protected by copyright"], 2, "A missing label proves nothing. Provenance data can be removed when files are copied or edited."],
+    ["Under U.S. Copyright Office guidance, purely AI-generated material is…", ["Automatically copyrighted to the AI company", "Not protected, because copyright requires human authorship", "Copyrighted to whoever typed the prompt", "Owned by the public after 10 years"], 1, "The Copyright Office's position is that copyright requires human authorship."],
+  ]},
+  { m: "M7", name: "AI Agents", qs: [
+    ["Which loop describes how an AI agent works toward a goal?", ["Read, write, repeat", "Perceive, reason, act, check", "Prompt, print, publish", "Train, test, deploy"], 1, "Agents repeat a loop: perceive the situation, reason about it, act, and check the result."],
+    ["Hidden text on a webpage that tries to hijack an AI agent is called…", ["Few-shot prompting", "Prompt injection", "A hallucination", "Lateral reading"], 1, "Prompt injection hides instructions in content an agent reads. Agents should treat that content as information, not commands."],
+    ["If each step of a 10-step agent task is 95% reliable, about how often does the whole task succeed?", ["About 95%", "About 85%", "About 60%", "About 10%"], 2, "0.95 to the 10th power is about 0.60, so small errors compound over many steps."],
+  ]},
+];
+const PTS = [100, 200, 300];
+const KEY = "csit110-midterm-board:best";
+const $ = (s) => document.querySelector(s);
+let state, cur;
+
+function fresh() { state = { score: 0, done: {} }; }
+function say(t) { const l = $("#live"); l.textContent = ""; setTimeout(() => (l.textContent = t), 30); }
+function focusEl(el) { el.setAttribute("tabindex", "-1"); el.focus(); }
+function view(id) { ["#boardView", "#qView", "#resView"].forEach((s) => ($(s).hidden = s !== id)); }
+function getBest() { try { return parseInt(localStorage.getItem(KEY) || "", 10); } catch (e) { return NaN; } }
+function setBest(v) { try { localStorage.setItem(KEY, String(v)); } catch (e) {} }
+
+function drawBoard(focusId) {
+  const b = $("#board"); b.innerHTML = "";
+  CATS.forEach((c, ci) => {
+    const col = document.createElement("section"); col.className = "col";
+    col.setAttribute("aria-label", `${c.m}: ${c.name}`);
+    col.innerHTML = `<h3>${c.name}<small>Module ${ci + 1}</small></h3>`;
+    PTS.forEach((p, qi) => {
+      const id = `t-${ci}-${qi}`, d = state.done[id];
+      const t = document.createElement("button"); t.type = "button"; t.className = "tile"; t.id = id;
+      if (d) { t.setAttribute("aria-disabled", "true"); t.textContent = d.right ? `✓ +${p}` : "✗ 0"; t.setAttribute("aria-label", `${c.name}, ${p} points: answered, ${d.right ? "correct" : "incorrect"}`); }
+      else { t.textContent = p; t.setAttribute("aria-label", `${c.name}, ${p} points`); t.addEventListener("click", () => ask(ci, qi)); }
+      col.appendChild(t);
+    });
+    b.appendChild(col);
+  });
+  $("#score").textContent = `${state.score} pts`;
+  const best = getBest();
+  $("#best").textContent = isNaN(best) ? "" : `Your best on this device: ${best} pts.`;
+  if (focusId) { const el = document.getElementById(focusId); if (el) el.focus(); }
+}
+
+function ask(ci, qi) {
+  cur = { ci, qi, id: `t-${ci}-${qi}` };
+  const [q, opts] = CATS[ci].qs[qi];
+  $("#qCat").textContent = `Module ${ci + 1}: ${CATS[ci].name} · ${PTS[qi]} points`;
+  $("#qText").textContent = q;
+  const box = $("#opts"); box.innerHTML = "";
+  opts.forEach((o, k) => {
+    const btn = document.createElement("button"); btn.type = "button"; btn.className = "opt";
+    btn.innerHTML = `<span class="k" aria-hidden="true">${"ABCD"[k]}</span><span class="t"></span><span class="b"></span>`;
+    btn.querySelector(".t").textContent = o;
+    btn.addEventListener("click", () => answer(k));
+    box.appendChild(btn);
+  });
+  $("#fb").hidden = true;
+  view("#qView"); focusEl($("#qText"));
+}
+
+function answer(k) {
+  const { ci, qi, id } = cur; if (state.done[id]) return;
+  const [, , correct, why] = CATS[ci].qs[qi];
+  const right = k === correct;
+  state.done[id] = { right };
+  if (right) state.score += PTS[qi];
+  [...document.querySelectorAll(".opt")].forEach((b, idx) => {
+    b.disabled = true;
+    if (idx === correct) { b.classList.add("right"); b.querySelector(".b").textContent = idx === k ? "Correct answer · your pick" : "Correct answer"; }
+    else if (idx === k) { b.classList.add("wrong"); b.querySelector(".b").textContent = "Your pick"; }
+  });
+  const fb = $("#fb"); fb.hidden = false; fb.className = right ? "good" : "bad";
+  $("#fbHead").textContent = right ? `Correct! +${PTS[qi]} points` : "Not quite. 0 points";
+  $("#fbText").textContent = why;
+  $("#score").textContent = `${state.score} pts`;
+  say(`${right ? "Correct" : "Not quite"}. ${why}`);
+  focusEl($("#fbHead"));
+}
+
+function results() {
+  view("#resView");
+  const total = CATS.length * PTS.reduce((a, b) => a + b, 0);
+  $("#resScore").textContent = `${state.score} / ${total} pts`;
+  const best = getBest(); if (isNaN(best) || state.score > best) setBest(state.score);
+  const body = $("#resBody"); body.innerHTML = "";
+  let weak = null;
+  CATS.forEach((c, ci) => {
+    let n = 0, pts = 0;
+    PTS.forEach((p, qi) => { const d = state.done[`t-${ci}-${qi}`]; if (d && d.right) { n++; pts += p; } });
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<th scope="row"></th><td>${n} of 3</td><td>${pts}</td>`;
+    tr.querySelector("th").textContent = `Module ${ci + 1}: ${c.name}`;
+    body.appendChild(tr);
+    if (!weak || n < weak.n) weak = { n, name: `Module ${ci + 1}: ${c.name}` };
+  });
+  $("#resTip").textContent = weak && weak.n < 3 ? `Your best review target: ${weak.name}. Reread that section of the Midterm Study Guide.` : "You answered every module correctly. You're ready.";
+  say(`Final score ${state.score} points.`);
+  focusEl($("#resHead"));
+}
+
+$("#backBtn").addEventListener("click", () => {
+  const all = Object.keys(state.done).length === CATS.length * PTS.length;
+  if (all) return results();
+  view("#boardView"); drawBoard(cur.id);
+});
+$("#finishBtn").addEventListener("click", results);
+$("#resetBtn").addEventListener("click", () => { fresh(); drawBoard(); say("The board has been reset."); });
+$("#againBtn").addEventListener("click", () => { fresh(); view("#boardView"); drawBoard("t-0-0"); });
+document.addEventListener("keydown", (e) => {
+  if ($("#qView").hidden || !$("#fb").hidden || e.altKey || e.ctrlKey || e.metaKey) return;
+  const k = "abcd".indexOf(e.key.toLowerCase()); if (k >= 0) { e.preventDefault(); answer(k); }
+});
+fresh(); drawBoard();
+</script>
+
+</body>
+</html>
